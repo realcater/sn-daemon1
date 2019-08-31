@@ -1,5 +1,6 @@
 import FluentPostgreSQL
 import Vapor
+import Authentication
 
 /// Called before your application initializes.
 public func configure(_ config: inout Config, _ env: inout Environment, _ services: inout Services) throws {
@@ -16,7 +17,7 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     // middlewares.use(FileMiddleware.self) // Serves files from `Public/` directory
     middlewares.use(ErrorMiddleware.self) // Catches errors and converts to HTTP response
     services.register(middlewares)
-
+    
     let hostname = Environment.get("DATABASE_HOSTNAME") ?? "localhost"
     let username = Environment.get("DATABASE_USER") ?? "vapor"
     let password = Environment.get("DATABASE_PASSWORD") ?? "password"
@@ -35,9 +36,17 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     databases.add(database: database, as: .psql)
 
     services.register(databases)
-
+    try services.register(AuthenticationProvider())
+ 
     // Configure migrations
     var migrations = MigrationConfig()
-    migrations.add(model: Users.self, database: .psql)
+    migrations.add(model: User.self, database: .psql)
+    migrations.add(model: Token.self, database: .psql)
+    migrations.add(migration: AdminUser.self, database: .psql)
+    migrations.add(migration: AddEmailToUser.self, database: .psql)
     services.register(migrations)
+    
+    var commandConfig = CommandConfig.default()
+    commandConfig.useFluentCommands()
+    services.register(commandConfig)
 }
