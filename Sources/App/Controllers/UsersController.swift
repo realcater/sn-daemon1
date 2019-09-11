@@ -19,6 +19,7 @@ struct UsersController: RouteCollection {
         //tokenAuthGroup.delete(User.parameter, use: delete)
         usersRoute.post(User.self, use: create)
         usersRoute.get(use: getAll)
+        usersRoute.get(User.parameter, use: getSingle)
         usersRoute.delete(User.parameter, use: delete)
     }
     
@@ -30,6 +31,10 @@ struct UsersController: RouteCollection {
     
     func getAll(_ req: Request) throws -> Future<[User.Public]> {
         return User.query(on: req).decode(data: User.Public.self).all()
+    }
+    
+    func getSingle(_ req: Request) throws -> Future<User.Public> {
+        return try req.parameters.next(User.self).convertToPublic()
     }
 
     func create(_ req: Request, user: User) throws -> Future<User.Public> {
