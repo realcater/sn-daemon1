@@ -1,10 +1,10 @@
-import App
+@testable import App
+import Vapor
 import XCTest
+import FluentPostgreSQL
 
 final class AppTests: XCTestCase {
     func testNothing() throws {
-        // Add your tests here
-        XCTAssert(true)
     }
 
     static let allTests = [
