@@ -10,17 +10,19 @@ struct UsersController: RouteCollection {
 
         basicAuthGroup.post("login", use: login)
     
-        //let tokenAuthMiddleware = User.tokenAuthMiddleware()
-        //let guardAuthMiddleware = User.guardAuthMiddleware()
-        //let tokenAuthGroup = usersRoute.grouped(tokenAuthMiddleware, guardAuthMiddleware)
+        let tokenAuthMiddleware = User.tokenAuthMiddleware()
+        let guardAuthMiddleware = User.guardAuthMiddleware()
+        let tokenAuthGroup = usersRoute.grouped(tokenAuthMiddleware, guardAuthMiddleware)
 
-        //tokenAuthGroup.post(User.self, use: create)
-        //tokenAuthGroup.get(use: getAll)
-        //tokenAuthGroup.delete(User.parameter, use: delete)
-        usersRoute.post(User.self, use: create)
-        usersRoute.get(use: getAll)
-        usersRoute.get(User.parameter, use: getSingle)
-        usersRoute.delete(User.parameter, use: delete)
+        tokenAuthGroup.post(User.self, use: create)
+        tokenAuthGroup.get(use: getAll)
+        tokenAuthGroup.get(User.parameter, use: getSingle)
+        tokenAuthGroup.delete(User.parameter, use: delete)
+        
+        //usersRoute.post(User.self, use: create)
+        //usersRoute.get(use: getAll)
+        //usersRoute.get(User.parameter, use: getSingle)
+        //usersRoute.delete(User.parameter, use: delete)
     }
     
     func login(_ req: Request) throws -> Future<Token> {
