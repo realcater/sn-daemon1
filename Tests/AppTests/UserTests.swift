@@ -37,7 +37,7 @@ final class UserTests: XCTestCase {
     }
     
     func testUserCanBeSavedWithAPI() throws {
-        let user = User(name: usersName, password: "password")
+        let user = User(name: usersName, password: usersPassword)
         let receivedUser = try app.getResponse(
             to: usersURI,
             method: .POST,
