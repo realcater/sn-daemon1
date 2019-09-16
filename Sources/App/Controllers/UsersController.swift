@@ -1,5 +1,6 @@
 import Vapor
 import Crypto
+import Fluent
 
 struct UsersController: RouteCollection {
     func boot(router: Router) throws {
@@ -14,15 +15,16 @@ struct UsersController: RouteCollection {
         let guardAuthMiddleware = User.guardAuthMiddleware()
         let tokenAuthGroup = usersRoute.grouped(tokenAuthMiddleware, guardAuthMiddleware)
 
+        usersRoute.get(use: getAll)
+        
         tokenAuthGroup.post(User.self, use: create)
-        tokenAuthGroup.get(use: getAll)
+        //tokenAuthGroup.get(use: getAll)
+        
         tokenAuthGroup.get(User.parameter, use: getSingle)
         tokenAuthGroup.delete(User.parameter, use: delete)
+        tokenAuthGroup.post(UUID.parameter, "restore", use: restore)
+        tokenAuthGroup.delete(User.parameter, "force", use: forceDelete)
         
-        //usersRoute.post(User.self, use: create)
-        //usersRoute.get(use: getAll)
-        //usersRoute.get(User.parameter, use: getSingle)
-        //usersRoute.delete(User.parameter, use: delete)
     }
     
     func login(_ req: Request) throws -> Future<Token> {
@@ -44,7 +46,43 @@ struct UsersController: RouteCollection {
         return user.save(on: req).convertToPublic()
     }
 
-    func delete(_ req: Request) throws -> Future<HTTPStatus> {
-        return try req.parameters.next(User.self).delete(on: req).transform(to: .noContent)
+    func delete(_ req: Request) throws -> Future<HTTPResponse> {
+        let user = try req.requireAuthenticated(User.self)
+        guard user.name == "admin" else {
+            let httpRes = HTTPResponse(status: .forbidden, body: "Only admin is allowed to delete users")
+            return Future.map(on: req) { return httpRes }
+        }
+        let httpRes = HTTPResponse(status: .noContent)
+        return try req.parameters.next(User.self).delete(on: req).transform(to: httpRes)
+    }
+    
+    func restore(_ req: Request) throws -> Future<HTTPResponse> {
+        let user = try req.requireAuthenticated(User.self)
+        guard user.name == "admin" else {
+            let httpRes = HTTPResponse(status: .forbidden, body: "Only admin is allowed to restore users")
+            return Future.map(on: req) { return httpRes }
+        }
+
+        let userID = try req.parameters.next(UUID.self)
+        return User.query(on: req, withSoftDeleted: true)
+                .filter(\.id == userID)
+                .first().flatMap(to: HTTPResponse.self) { user in
+                    guard let user = user else {
+                        throw Abort(.notFound)
+                    }
+                    let httpRes = HTTPResponse(status: .ok, body: "Restored")
+                    return user.restore(on: req).transform(to: httpRes)
+            }
+    }
+    func forceDelete(_ req: Request) throws -> Future<HTTPResponse> {
+        let user = try req.requireAuthenticated(User.self)
+        guard user.name == "admin" else {
+            let httpRes = HTTPResponse(status: .forbidden, body: "Only admin is allowed to delete users")
+            return Future.map(on: req) { return httpRes }
+        }
+        let httpRes = HTTPResponse(status: .noContent)
+        return try req.parameters.next(User.self).flatMap(to: HTTPResponse.self) { user in
+                    user.delete(force: true, on: req).transform(to: httpRes)
+            }
     }
 }
