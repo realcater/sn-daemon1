@@ -18,33 +18,35 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     middlewares.use(ErrorMiddleware.self) // Catches errors and converts to HTTP response
     services.register(middlewares)
     
-    let hostname = Environment.get("DATABASE_HOSTNAME") ?? "localhost"
-    let username = Environment.get("DATABASE_USER") ?? "vapor"
-    let password = Environment.get("DATABASE_PASSWORD") ?? "password"
+    let databaseConfig: PostgreSQLDatabaseConfig
     
-    /*
-    let databaseName = Environment.get("DATABASE_DB") ?? "vapor"
-    let databasePort = Int(Environment.get("DATABASE_PORT") ?? "") ?? 5432
-    */
-    let databaseName: String
-    let databasePort: Int
-    if (env == .testing) {
-        databaseName = "vapor-test"
-        databasePort = Int(Environment.get("DATABASE_PORT") ?? "") ?? 5433
+    if let url = Environment.get("DATABASE_URL") {
+        databaseConfig = PostgreSQLDatabaseConfig(url: url)!
     } else {
-        databaseName = Environment.get("DATABASE_DB") ?? "vapor"
-        databasePort = 5432
+        let username = Environment.get("DATABASE_USER") ?? "vapor"
+        let password = Environment.get("DATABASE_PASSWORD") ?? "password"
+        let hostname = Environment.get("DATABASE_HOSTNAME") ?? "localhost"
+        let databaseName: String
+        let databasePort: Int
+        if (env == .testing) {
+            databaseName = "vapor-test"
+            databasePort = Int(Environment.get("DATABASE_PORT") ?? "") ?? 5433
+        } else {
+            databaseName = Environment.get("DATABASE_DB") ?? "vapor"
+            databasePort = 5432
+        }
+        databaseConfig = PostgreSQLDatabaseConfig(
+            hostname: hostname,
+            port: databasePort,
+            username: username,
+            database: databaseName,
+            password: password)
     }
- 
-    let databaseConfig = PostgreSQLDatabaseConfig(
-        hostname: hostname,
-        port: databasePort,
-        username: username,
-        database: databaseName,
-        password: password)
+    
     let database = PostgreSQLDatabase(config: databaseConfig)
 
     var databases = DatabasesConfig()
+    
     databases.add(database: database, as: .psql)
 
     services.register(databases)
