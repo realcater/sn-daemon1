@@ -1,7 +1,7 @@
 import FluentPostgreSQL
 import Vapor
 
-
+/*
 struct AddFieldsToUser: Migration {
     typealias Database = PostgreSQLDatabase
     
@@ -20,4 +20,4 @@ struct AddFieldsToUser: Migration {
         }
     }
 }
-
+*/

@@ -6,9 +6,9 @@ final class User: Codable {
     var id: UUID?
     var name: String
     var password: String
-    var createdAt: Date?
-    var updatedAt: Date?
-    var deletedAt: Date?
+    //var createdAt: Date?
+    //var updatedAt: Date?
+    //var deletedAt: Date?
 
     init(name: String, password: String) {
         self.name = name
@@ -78,9 +78,9 @@ struct AdminUser: Migration {
 }
 
 extension User: PostgreSQLUUIDModel {
-    static let createdAtKey: TimestampKey? = \.createdAt
-    static let updatedAtKey: TimestampKey? = \.updatedAt
-    static let deletedAtKey: TimestampKey? = \.deletedAt
+    //static let createdAtKey: TimestampKey? = \.createdAt
+    //static let updatedAtKey: TimestampKey? = \.updatedAt
+    //static let deletedAtKey: TimestampKey? = \.deletedAt
 }
 extension User: Content {}
 extension User.Public: Content {}
