@@ -47,6 +47,7 @@ extension User: Migration {
             builder.field(for: \.password)
             builder.field(for: \.createdAt)
             builder.field(for: \.updatedAt)
+            builder.field(for: \.deletedAt)
             
             builder.unique(on: \.name)
         }
@@ -81,9 +82,9 @@ struct AdminUser: Migration {
 }
 
 extension User: PostgreSQLUUIDModel {
-    //static let createdAtKey: TimestampKey? = \.createdAt
-    //static let updatedAtKey: TimestampKey? = \.updatedAt
-    //static let deletedAtKey: TimestampKey? = \.deletedAt
+    static let createdAtKey: TimestampKey? = \.createdAt
+    static let updatedAtKey: TimestampKey? = \.updatedAt
+    static let deletedAtKey: TimestampKey? = \.deletedAt
 }
 extension User: Content {}
 extension User.Public: Content {}
