@@ -8,7 +8,7 @@ struct AddFieldsToUser: Migration {
         return Database.update(User.self, on: connection) { builder in
             //builder.field(for: \.createdAt)
             //builder.field(for: \.updatedAt)
-            builder.field(for: \.deletedAt)
+            //builder.field(for: \.deletedAt)
             
         }
     }
@@ -16,7 +16,7 @@ struct AddFieldsToUser: Migration {
         return Database.update(User.self, on: connection) { builder in
             //builder.deleteField(for: \.createdAt)
             //builder.deleteField(for: \.updatedAt)
-            builder.deleteField(for: \.deletedAt)
+            //builder.deleteField(for: \.deletedAt)
         }
     }
 }

@@ -6,9 +6,9 @@ final class User: Codable {
     var id: UUID?
     var name: String
     var password: String
-    var createdAt: Date? // added via 1st migration
-    var updatedAt: Date? // added via 1st migration
-    var deletedAt: Date? // trying to add via 2nd migration
+    var createdAt: Date?
+    var updatedAt: Date?
+    var deletedAt: Date?
 
     init(name: String, password: String) {
         self.name = name
