@@ -6,9 +6,9 @@ final class User: Codable {
     var id: UUID?
     var name: String
     var password: String
-    //var createdAt: Date?
-    //var updatedAt: Date?
-    //var deletedAt: Date?
+    var createdAt: Date? // added via 1st migration
+    var updatedAt: Date? // added via 1st migration
+    var deletedAt: Date? // trying to add via 2nd migration
 
     init(name: String, password: String) {
         self.name = name
@@ -45,6 +45,9 @@ extension User: Migration {
             builder.field(for: \.id, isIdentifier: true)
             builder.field(for: \.name)
             builder.field(for: \.password)
+            builder.field(for: \.createdAt)
+            builder.field(for: \.updatedAt)
+            
             builder.unique(on: \.name)
         }
     }

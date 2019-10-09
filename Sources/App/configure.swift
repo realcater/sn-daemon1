@@ -57,7 +57,7 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     migrations.add(model: User.self, database: .psql)
     migrations.add(model: Token.self, database: .psql)
     migrations.add(migration: AdminUser.self, database: .psql)
-    //migrations.add(migration: AddFieldsToUser.self, database: .psql)
+    migrations.add(migration: AddFieldsToUser.self, database: .psql)
     services.register(migrations)
     
     var commandConfig = CommandConfig.default()
