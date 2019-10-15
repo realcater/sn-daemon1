@@ -6,6 +6,7 @@ final class User: Codable {
     var id: UUID?
     var name: String
     var password: String
+    var score: Int?
     var createdAt: Date?
     var updatedAt: Date?
     var deletedAt: Date?
@@ -17,17 +18,19 @@ final class User: Codable {
     final class Public: Codable {
         var id: UUID?
         var name: String
+        var score: Int?
         
-        init(id: UUID?, name: String) {
+        init(id: UUID?, name: String, score: Int?) {
             self.id = id
             self.name = name
+            self.score = score
         }
     }
 }
 
 extension User {
     func convertToPublic() -> User.Public {
-        return User.Public(id: id, name: name)
+        return User.Public(id: id, name: name, score: score)
     }
 }
 
@@ -74,6 +77,24 @@ struct AdminUser: Migration {
             fatalError("Failed to create admin user")
         }
         let user = User(name: "admin", password: hashedPassword)
+        return user.save(on: connection).transform(to: ())
+    }
+    static func revert(on connection: PostgreSQLConnection) -> Future<Void> {
+        return .done(on: connection)
+    }
+}
+
+struct AppUser: Migration {
+    typealias Database = PostgreSQLDatabase
+    static func prepare(on connection: PostgreSQLConnection) -> Future<Void> {
+        guard let passwordString = Environment.get("APP_PASSWORD") else {
+            fatalError("APP_PASSWORD ENV is not set")
+        }
+        let password = try? BCrypt.hash(passwordString)
+        guard let hashedPassword = password else {
+            fatalError("Failed to create app user")
+        }
+        let user = User(name: "app", password: hashedPassword)
         return user.save(on: connection).transform(to: ())
     }
     static func revert(on connection: PostgreSQLConnection) -> Future<Void> {

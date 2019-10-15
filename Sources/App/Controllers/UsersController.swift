@@ -7,23 +7,35 @@ struct UsersController: RouteCollection {
         let usersRoute = router.grouped("api", "users")
         
         let basicAuthMiddleware = User.basicAuthMiddleware(using: BCryptDigest())
-        let basicAuthGroup = usersRoute.grouped(basicAuthMiddleware)
-
-        basicAuthGroup.post("login", use: login)
-    
         let tokenAuthMiddleware = User.tokenAuthMiddleware()
         let guardAuthMiddleware = User.guardAuthMiddleware()
-        let tokenAuthGroup = usersRoute.grouped(tokenAuthMiddleware, guardAuthMiddleware)
-
-        usersRoute.get(use: getAll)
+        let adminUserAuthMiddleware = AdminUserAuthMiddleware()
+        let appUserAuthMiddleware = AppUserAuthMiddleware()
         
-        tokenAuthGroup.post(User.self, use: create)
+        let basicAuthGroup = usersRoute.grouped(basicAuthMiddleware)
+        let tokenAuthGroup = usersRoute.grouped(
+            tokenAuthMiddleware,
+            guardAuthMiddleware)
+        let adminAuthGroup = usersRoute.grouped(
+            tokenAuthMiddleware,
+            guardAuthMiddleware,
+            adminUserAuthMiddleware)
+        let appAuthGroup = usersRoute.grouped(
+            tokenAuthMiddleware,
+            guardAuthMiddleware,
+            appUserAuthMiddleware)
+        
+        basicAuthGroup.post("login", use: login)
+        
         //tokenAuthGroup.get(use: getAll)
-        
+        usersRoute.get(use: getAll)
         tokenAuthGroup.get(User.parameter, use: getSingle)
-        tokenAuthGroup.delete(User.parameter, use: delete)
-        tokenAuthGroup.post(UUID.parameter, "restore", use: restore)
-        tokenAuthGroup.delete(User.parameter, "force", use: forceDelete)
+        
+        appAuthGroup.post(User.self, use: create)
+        adminAuthGroup.delete(User.parameter, use: delete)
+        adminAuthGroup.post(UUID.parameter, "restore", use: restore)
+        adminAuthGroup.delete(User.parameter, "force", use: forceDelete)
+
         
     }
     
@@ -47,22 +59,11 @@ struct UsersController: RouteCollection {
     }
 
     func delete(_ req: Request) throws -> Future<HTTPResponse> {
-        let user = try req.requireAuthenticated(User.self)
-        guard user.name == "admin" else {
-            let httpRes = HTTPResponse(status: .forbidden, body: "Only admin is allowed to delete users")
-            return Future.map(on: req) { return httpRes }
-        }
         let httpRes = HTTPResponse(status: .noContent)
         return try req.parameters.next(User.self).delete(on: req).transform(to: httpRes)
     }
     
     func restore(_ req: Request) throws -> Future<HTTPResponse> {
-        let user = try req.requireAuthenticated(User.self)
-        guard user.name == "admin" else {
-            let httpRes = HTTPResponse(status: .forbidden, body: "Only admin is allowed to restore users")
-            return Future.map(on: req) { return httpRes }
-        }
-
         let userID = try req.parameters.next(UUID.self)
         return User.query(on: req, withSoftDeleted: true)
                 .filter(\.id == userID)
@@ -75,11 +76,6 @@ struct UsersController: RouteCollection {
             }
     }
     func forceDelete(_ req: Request) throws -> Future<HTTPResponse> {
-        let user = try req.requireAuthenticated(User.self)
-        guard user.name == "admin" else {
-            let httpRes = HTTPResponse(status: .forbidden, body: "Only admin is allowed to delete users")
-            return Future.map(on: req) { return httpRes }
-        }
         let httpRes = HTTPResponse(status: .noContent)
         return try req.parameters.next(User.self).flatMap(to: HTTPResponse.self) { user in
                     user.delete(force: true, on: req).transform(to: httpRes)
