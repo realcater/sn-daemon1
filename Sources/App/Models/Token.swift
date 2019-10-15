@@ -7,10 +7,12 @@ final class Token: Codable {
     var id: UUID?
     var token: String
     var userID: User.ID
+    var expiredAt: Date?
     
     init(token: String, userID: User.ID) {
         self.token = token
         self.userID = userID
+        self.expiredAt = Calendar.current.date (byAdding: .day, value: 1, to: Date())
     }
 }
 
