@@ -17,8 +17,7 @@ struct UsersController: RouteCollection {
             tokenAuthMiddleware,
             guardAuthMiddleware)
         let adminAuthGroup = usersRoute.grouped(
-            tokenAuthMiddleware,
-            guardAuthMiddleware,
+            basicAuthMiddleware,
             adminUserAuthMiddleware)
         let appAuthGroup = usersRoute.grouped(
             tokenAuthMiddleware,
@@ -78,7 +77,7 @@ struct UsersController: RouteCollection {
     func forceDelete(_ req: Request) throws -> Future<HTTPResponse> {
         let httpRes = HTTPResponse(status: .noContent)
         return try req.parameters.next(User.self).flatMap(to: HTTPResponse.self) { user in
-                    user.delete(force: true, on: req).transform(to: httpRes)
-            }
+            user.delete(force: true, on: req).transform(to: httpRes)
+        }
     }
 }

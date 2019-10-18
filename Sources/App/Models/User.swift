@@ -48,6 +48,7 @@ extension User: Migration {
             builder.field(for: \.id, isIdentifier: true)
             builder.field(for: \.name)
             builder.field(for: \.password)
+            builder.field(for: \.score)
             builder.field(for: \.createdAt)
             builder.field(for: \.updatedAt)
             builder.field(for: \.deletedAt)

@@ -1,6 +1,13 @@
 import Vapor
+import Fluent
 
-/// Called after your application has initialized.
 public func boot(_ app: Application) throws {
-    // Your code here
+    let request = Request(using: app)
+    func runRepeatTimer() throws {
+        app.eventLoop.scheduleTask(in: TimeAmount.minutes(1), runRepeatTimer)
+        _ = try TokenController.deleteExpiredTokens(request).map { deletedQty in
+            print(deletedQty)
+        }
+    }
+    try runRepeatTimer()
 }

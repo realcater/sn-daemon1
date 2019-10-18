@@ -12,7 +12,7 @@ final class Token: Codable {
     init(token: String, userID: User.ID) {
         self.token = token
         self.userID = userID
-        self.expiredAt = Calendar.current.date (byAdding: .day, value: 1, to: Date())
+        self.expiredAt = Calendar.current.date (byAdding: .second, value: 30, to: Date())
     }
 }
 
@@ -28,6 +28,7 @@ extension Token: Migration {
 }
 
 extension Token: Content {}
+extension Token: Parameter {}
 
 extension Token {
     static func generate(for user: User) throws -> Token {
