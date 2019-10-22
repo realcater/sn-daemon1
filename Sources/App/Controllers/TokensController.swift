@@ -2,7 +2,7 @@ import Vapor
 import Crypto
 import Fluent
 
-struct TokenController: RouteCollection {
+struct TokensController: RouteCollection {
     func boot(router: Router) throws {
         let tokensRoute = router.grouped("api", "tokens")
         
@@ -13,7 +13,7 @@ struct TokenController: RouteCollection {
             basicAuthMiddleware,
             adminUserAuthMiddleware)
         
-        adminAuthGroup.delete(use: TokenController.deleteExpiredTokens)
+        adminAuthGroup.delete(use: TokensController.deleteExpiredTokens)
     }
     
     static func deleteExpiredTokens(_ req: Request) throws -> Future<String> {

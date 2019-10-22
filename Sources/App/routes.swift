@@ -3,9 +3,12 @@ import Fluent
 
 /// Register your application's routes here.
 public func routes(_ router: Router) throws {
-    let userController = UsersController()
-    try router.register(collection: userController)
+    let usersController = UsersController()
+    try router.register(collection: usersController)
     
-    let tokenController = TokenController()
-    try router.register(collection: tokenController)
+    let gamesController = GamesController()
+    try router.register(collection: gamesController)
+    
+    let tokensController = TokensController()
+    try router.register(collection: tokensController)
 }
