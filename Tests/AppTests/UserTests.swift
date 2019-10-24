@@ -1,11 +1,10 @@
-
 @testable import App
 import Vapor
 import XCTest
 import FluentPostgreSQL
 
 final class UserTests: XCTestCase {
-    let usersName = "Alice"
+    let usersName = "Dima"
     let usersPassword = "password"
     let usersURI = "/api/users/"
     var app: Application!
@@ -22,17 +21,17 @@ final class UserTests: XCTestCase {
         try? app.syncShutdownGracefully()
     }
     
-    func testUsersCanBeRetrievedFromAPI() throws {
+    func testGettingAllUsersFromTheAPI() throws {
         let user = try User.create(name: usersName, on: conn)
         
         let users = try app.getResponse(
             to: usersURI,
             decodeTo: [User.Public].self,
-            loggedInRequest: true)
+            loggedInRequest: false)
         
-        XCTAssertEqual(users.count, 2)
-        XCTAssertEqual(users[1].name, usersName)
-        XCTAssertEqual(users[1].id, user.id)
+        XCTAssertEqual(users.count, 3)
+        XCTAssertEqual(users[2].name, usersName)
+        XCTAssertEqual(users[2].id, user.id)
     }
     
     func testGettingASingleUserFromTheAPI() throws {
@@ -49,30 +48,33 @@ final class UserTests: XCTestCase {
 
     func testUserCanBeDeletedWithAPI() throws {
         let user = try User.create(name: usersName, on: conn)
-        
         let response = try app.sendRequest(
             to: "\(usersURI)\(user.id!)",
             method: .DELETE,
-            loggedInRequest: true)
-        
+            isBasicAuth: true)
         let users = try app.getResponse(
             to: usersURI,
             decodeTo: [User.Public].self,
             loggedInRequest: true)
-        
+ 
         XCTAssertEqual(response.http.status, .noContent)
-        XCTAssertEqual(users.count, 1)
+        XCTAssertEqual(users.count, 2)
     }
     
     func testUserCanBeSavedWithAPI() throws {
         let user = User(name: usersName, password: usersPassword)
+        guard let appUserPasswordString = Environment.get("APP_PASSWORD") else {
+            fatalError("APP_PASSWORD ENV is not set")
+        }
+        let appUser = User(name: "app", password: appUserPasswordString)
         let receivedUser = try app.getResponse(
             to: usersURI,
             method: .POST,
             headers: ["Content-Type": "application/json"],
             data: user,
             decodeTo: User.Public.self,
-            loggedInRequest: true)
+            loggedInRequest: true,
+            loggedInUser: appUser)
         
         XCTAssertEqual(receivedUser.name, usersName)
         XCTAssertNotNil(receivedUser.id)
@@ -82,9 +84,9 @@ final class UserTests: XCTestCase {
             decodeTo: [User.Public].self,
             loggedInRequest: true)
         
-        XCTAssertEqual(users.count, 2)
-        XCTAssertEqual(users[1].name, usersName)
-        XCTAssertEqual(users[1].id, receivedUser.id)
+        XCTAssertEqual(users.count, 3)
+        XCTAssertEqual(users[2].name, usersName)
+        XCTAssertEqual(users[2].id, receivedUser.id)
     }
     
     

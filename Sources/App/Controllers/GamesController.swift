@@ -4,17 +4,17 @@ import Fluent
 
 struct GamesController: RouteCollection {
     func boot(router: Router) throws {
-        let usersRoute = router.grouped("api", "games")
+        let gamesRoute = router.grouped("api", "games")
         
         let tokenAuthMiddleware = User.tokenAuthMiddleware()
         let guardAuthMiddleware = User.guardAuthMiddleware()
-        let tokenAuthGroup = usersRoute.grouped(
+        let tokenAuthGroup = gamesRoute.grouped(
             tokenAuthMiddleware,
             guardAuthMiddleware)
         
         
         //tokenAuthGroup.get(use: getAll)
-        usersRoute.get(use: getAll)
+        gamesRoute.get(use: getAll)
         tokenAuthGroup.get(Game.parameter, use: getSingle)
         
         tokenAuthGroup.post(GameCreateData.self, use: create)
@@ -58,9 +58,13 @@ struct GamesController: RouteCollection {
     }
     
     func delete(_ req: Request) throws -> Future<HTTPResponse> {
-        let httpRes = HTTPResponse(status: .noContent)
-        return try req.parameters.next(User.self).flatMap(to: HTTPResponse.self) { user in
-            user.delete(force: true, on: req).transform(to: httpRes)
+        let user = try req.requireAuthenticated(User.self)
+        return try req.parameters.next(Game.self).flatMap { game in
+            if game.userID1 != user.id {
+                throw Abort(.forbidden)
+            } else {
+                return game.delete(force: true, on: req).transform(to: HTTPResponse(status: .noContent))
+            }
         }
     }
 }
