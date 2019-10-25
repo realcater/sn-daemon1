@@ -39,11 +39,14 @@ final class Game: Codable {
         var isGameStarted: Bool
         var isGameFinished: Bool
         
-        init(id: UUID?, name: String, playersQty: Int, userID1: User.ID, isGameStarted: Bool, isGameFinished: Bool) {
+        init(id: UUID?, name: String, playersQty: Int, userID1: User.ID, userID2: User.ID? = nil, userID3: User.ID? = nil, userID4: User.ID? = nil, isGameStarted: Bool, isGameFinished: Bool) {
             self.id = id
             self.name = name
             self.playersQty = playersQty
             self.userID1 = userID1
+            self.userID2 = userID2
+            self.userID3 = userID3
+            self.userID4 = userID4
             self.isGameStarted = isGameStarted
             self.isGameFinished = isGameFinished
         }
@@ -52,7 +55,7 @@ final class Game: Codable {
 
 extension Game {
     func convertToPublic() -> Game.Public {
-        return Game.Public(id: id, name: name, playersQty: playersQty, userID1: userID1, isGameStarted: isGameStarted, isGameFinished: isGameFinished)
+        return Game.Public(id: id, name: name, playersQty: playersQty, userID1: userID1, userID2: userID2, userID3: userID3, userID4: userID4, isGameStarted: isGameStarted, isGameFinished: isGameFinished)
     }
 }
 

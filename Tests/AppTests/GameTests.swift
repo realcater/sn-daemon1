@@ -5,6 +5,7 @@ import FluentPostgreSQL
 
 final class GameTests: XCTestCase {
     let usersName = "Dima"
+    let usersName2 = "Lena"
     let usersPassword = "password"
     let usersURI = "/api/users/"
     let gamesName = "Game-A02"
@@ -41,13 +42,13 @@ final class GameTests: XCTestCase {
     func testGettingASingleGameFromTheAPI() throws {
         let game = try Game.create(name: gamesName, on: conn)
         
-        let receivedgame = try app.getResponse(
+        let receivedGame = try app.getResponse(
             to: "\(gamesURI)\(game.id!)",
             decodeTo: Game.Public.self,
             loggedInRequest: true)
         
-        XCTAssertEqual(receivedgame.name, gamesName)
-        XCTAssertEqual(receivedgame.id, game.id)
+        XCTAssertEqual(receivedGame.name, gamesName)
+        XCTAssertEqual(receivedGame.id, game.id)
     }
     
     func testGameCanBeDeletedWithAPI() throws {
@@ -93,6 +94,31 @@ final class GameTests: XCTestCase {
         XCTAssertEqual(games[0].id, receivedgame.id)
     }
     
-    
-    
+    func testGameCanBeUpdatedWithAPI() throws {
+        let user = try User.create(name: usersName, on: conn)
+        let user2 = try User.create(name: usersName2, on: conn)
+        let game = try Game.create(owner: user, on: conn)
+        let updatedData = GameUpdateData(userID2: user2.id, isGameStarted: true, isGameFinished: true)
+        
+        let updatedGame = try app.getResponse(
+            to: "\(gamesURI)\(game.id!)",
+            method: .PUT,
+            headers: ["Content-Type": "application/json"],
+            data: updatedData,
+            decodeTo: Game.Public.self,
+            loggedInRequest: true)
+        
+        XCTAssertEqual(updatedGame.userID2, user2.id)
+        XCTAssertEqual(updatedGame.isGameStarted, true)
+        XCTAssertEqual(updatedGame.isGameFinished, true)
+        
+        let receivedGame = try app.getResponse(
+            to: "\(gamesURI)\(game.id!)",
+            decodeTo: Game.Public.self,
+            loggedInRequest: true)
+        
+        XCTAssertEqual(receivedGame.userID2, user2.id)
+        XCTAssertEqual(receivedGame.isGameStarted, true)
+        XCTAssertEqual(receivedGame.isGameFinished, true)
+    }
 }

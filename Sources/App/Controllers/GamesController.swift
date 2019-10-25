@@ -81,5 +81,12 @@ struct GameUpdateData: Content {
     let userID4: User.ID?
     let isGameStarted: Bool?
     let isGameFinished: Bool?
+    init(userID2: User.ID? = nil, userID3: User.ID? = nil, userID4: User.ID? = nil, isGameStarted: Bool? = nil, isGameFinished: Bool? = nil) {
+        self.userID2 = userID2
+        self.userID3 = userID3
+        self.userID4 = userID4
+        self.isGameStarted = isGameStarted
+        self.isGameFinished = isGameFinished
+    }
 }
 
