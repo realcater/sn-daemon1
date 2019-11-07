@@ -32,12 +32,20 @@ extension User {
     func convertToPublic() -> User.Public {
         return User.Public(id: id, name: name, score: score)
     }
+    func getName() -> String {
+        return name
+    }
 }
 
 extension Future where T: User {
     func convertToPublic() -> Future<User.Public> {
         return self.map(to: User.Public.self) { user in
             return user.convertToPublic()
+        }
+    }
+    func getName() -> Future<String> {
+        return self.map(to: String.self) { user in
+            return user.name
         }
     }
 }

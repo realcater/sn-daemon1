@@ -10,8 +10,10 @@ final class GameTests: XCTestCase {
     let usersURI = "/api/users/"
     let gamesName = "Game-A02"
     let gamesPassword = "password"
-    let playersQty = 4
+    let usersQty = 4
     let gamesURI = "/api/games/"
+    let mainUserRoles: [Player] = [K.redSpymaster]
+    let cards: [Card] = K.testCards
     var app: Application!
     var conn: PostgreSQLConnection!
     
@@ -72,14 +74,15 @@ final class GameTests: XCTestCase {
     
     func testGameCanBeSavedWithAPI() throws {
         let user = try User.create(name: usersName, on: conn)
-        let game = Game(name: gamesName, password: gamesPassword, playersQty: playersQty, userID1: user.id!)
+        let game = Game(name: gamesName, password: gamesPassword, usersQty: usersQty, mainUserID: user.id!,mainUserRoles: mainUserRoles, cards: K.testCards)
         let receivedgame = try app.getResponse(
             to: gamesURI,
             method: .POST,
             headers: ["Content-Type": "application/json"],
             data: game,
             decodeTo: Game.Public.self,
-            loggedInRequest: true)
+            loggedInRequest: true,
+            loggedInUser: user)
         
         XCTAssertEqual(receivedgame.name, gamesName)
         XCTAssertNotNil(receivedgame.id)
@@ -87,7 +90,8 @@ final class GameTests: XCTestCase {
         let games = try app.getResponse(
             to: gamesURI,
             decodeTo: [Game.Public].self,
-            loggedInRequest: true)
+            loggedInRequest: true,
+            loggedInUser: user)
         
         XCTAssertEqual(games.count, 1)
         XCTAssertEqual(games[0].name, gamesName)
@@ -98,7 +102,8 @@ final class GameTests: XCTestCase {
         let user = try User.create(name: usersName, on: conn)
         let user2 = try User.create(name: usersName2, on: conn)
         let game = try Game.create(owner: user, on: conn)
-        let updatedData = GameUpdateData(userID2: user2.id, isGameStarted: true, isGameFinished: true)
+        
+        let updatedData = GameUpdateData(userID2: user2.id, isGameStarted: true, isGameFinished: true, startTeam: K.redTeam, usersOrder: [0,3,2])
         
         let updatedGame = try app.getResponse(
             to: "\(gamesURI)\(game.id!)",
@@ -106,7 +111,8 @@ final class GameTests: XCTestCase {
             headers: ["Content-Type": "application/json"],
             data: updatedData,
             decodeTo: Game.Public.self,
-            loggedInRequest: true)
+            loggedInRequest: true,
+            loggedInUser: user)
         
         XCTAssertEqual(updatedGame.userID2, user2.id)
         XCTAssertEqual(updatedGame.isGameStarted, true)

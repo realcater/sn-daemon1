@@ -47,7 +47,34 @@ struct UsersController: RouteCollection {
     func getAll(_ req: Request) throws -> Future<[User.Public]> {
         return User.query(on: req).decode(data: User.Public.self).all()
     }
+    static func getByName(_ req: Request, name: String) throws -> Future<User> {
+        let fUser: Future<User?> = User.query(on: req).filter(\.name == name).first()
+        let user = fUser.unwrap(or: Abort(.badRequest))
+        return user
+        //return User.query(on: req).filter(\.name == name).all()
+        //    .flatMap(to: HTTPStatus.self)
+        
+    }
+    /*
+    static func getOne(_ req: Request, name: String) throws -> Future<String> {
+        let str = "Hi!"
+        User.query(on:)
+            .filter(\.name == name)
+            .first().flatMap(to: String) { user in
+                
+                let httpRes = HTTPResponse(status: .ok, body: "Restored")
+                return user.restore(on: req).transform(to: httpRes)
+    }
+    */
+    /*
+    let filterQuery = Token.query(on: req).filter(\.expiredAt < Date())
+    return filterQuery.count().flatMap { count in
+    return filterQuery.delete().transform(to: "\(count) tokens deleted")
+    }
     
+    _ = try TokensController.deleteExpiredTokens(request).map { deletedQty in
+    print(deletedQty)
+    */
     func getSingle(_ req: Request) throws -> Future<User.Public> {
         return try req.parameters.next(User.self).convertToPublic()
     }

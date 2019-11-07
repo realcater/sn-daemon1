@@ -14,13 +14,13 @@ extension User {
         }
     }
 extension Game {
-    static func create(name: String = "Game-A01", playersQty: Int = 4, owner: User? = nil, on connection: PostgreSQLConnection) throws -> Game {
+    static func create(name: String = "Game-A01", usersQty: Int = 4, owner: User? = nil, on connection: PostgreSQLConnection) throws -> Game {
         var gameOwner = owner
         if gameOwner == nil {
             gameOwner = try User.create(on: connection)
         }
         let password = try BCrypt.hash("password")
-        let game = Game(name: name, password: password, playersQty: playersQty, userID1: gameOwner!.id!)
+        let game = Game(name: name, password: password, usersQty: usersQty, mainUserID: gameOwner!.id!,mainUserRoles: [K.redSpymaster], cards: K.testCards)
         return try game.save(on: connection).wait()
     }
 }

@@ -67,4 +67,8 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     var commandConfig = CommandConfig.default()
     commandConfig.useFluentCommands()
     services.register(commandConfig)
+    
+    let websockets = NIOWebSocketServer.default()
+    sockets(websockets)
+    services.register(websockets, as: WebSocketServer.self)
 }

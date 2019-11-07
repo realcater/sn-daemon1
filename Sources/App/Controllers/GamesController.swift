@@ -12,7 +12,6 @@ struct GamesController: RouteCollection {
             tokenAuthMiddleware,
             guardAuthMiddleware)
         
-        
         //tokenAuthGroup.get(use: getAll)
         gamesRoute.get(use: getAll)
         tokenAuthGroup.get(Game.parameter, use: getSingle)
@@ -33,26 +32,32 @@ struct GamesController: RouteCollection {
     func create(_ req: Request, data: GameCreateData) throws -> Future<Game.Public> {
         let user = try req.requireAuthenticated(User.self)
         let password = try BCrypt.hash(data.password)
-        let game = try Game(name: data.name, password: password, playersQty: data.playersQty, userID1: user.requireID())
+        let game = try Game(name: data.name, password: password, usersQty: data.usersQty, mainUserID: user.requireID(), mainUserRoles: data.mainUserRoles, cards: data.cards)
         return game.save(on: req).convertToPublic()
     }
     
     func update(_ req: Request) throws -> Future<Game.Public> {
+        let user = try req.requireAuthenticated(User.self)
         return try flatMap(to: Game.Public.self,
                            req.parameters.next(Game.self),
                            req.content.decode(GameUpdateData.self)) { game, updateData in
+                            guard game.mainUserID == user.id else { throw Abort(.forbidden) }
+                            if let userID = updateData.userID1 {
+                                game.userID1 = userID }
                             if let userID = updateData.userID2 {
                                 game.userID2 = userID }
                             if let userID = updateData.userID3 {
                                 game.userID3 = userID }
-                            if let userID = updateData.userID4 {
-                                game.userID4 = userID }
                             if let isGameStarted = updateData.isGameStarted {
                                 game.isGameStarted = isGameStarted
                             }
                             if let isGameFinished = updateData.isGameFinished {
                                 game.isGameFinished = isGameFinished
                             }
+                            if let startTeam = updateData.startTeam {
+                                game.startTeam = startTeam }
+                            if let usersOrder = updateData.usersOrder {
+                                game.usersOrder = usersOrder }
                             return game.save(on: req).convertToPublic()
         }
     }
@@ -60,11 +65,8 @@ struct GamesController: RouteCollection {
     func delete(_ req: Request) throws -> Future<HTTPResponse> {
         let user = try req.requireAuthenticated(User.self)
         return try req.parameters.next(Game.self).flatMap { game in
-            if game.userID1 != user.id {
-                throw Abort(.forbidden)
-            } else {
-                return game.delete(force: true, on: req).transform(to: HTTPResponse(status: .noContent))
-            }
+            guard game.mainUserID == user.id else { throw Abort(.forbidden) }
+            return game.delete(force: true, on: req).transform(to: HTTPResponse(status: .noContent))
         }
     }
 }
@@ -72,21 +74,28 @@ struct GamesController: RouteCollection {
 struct GameCreateData: Content {
     let name: String
     let password: String
-    let playersQty: Int
+    let usersQty: Int
+    let mainUserRoles: [Player]
+    let cards: [Card]
+    
 }
 
 struct GameUpdateData: Content {
+    let userID1: User.ID?
     let userID2: User.ID?
     let userID3: User.ID?
-    let userID4: User.ID?
     let isGameStarted: Bool?
     let isGameFinished: Bool?
-    init(userID2: User.ID? = nil, userID3: User.ID? = nil, userID4: User.ID? = nil, isGameStarted: Bool? = nil, isGameFinished: Bool? = nil) {
+    let startTeam: Int?
+    let usersOrder: [Int]?
+    init(userID1: User.ID? = nil, userID2: User.ID? = nil, userID3: User.ID? = nil, isGameStarted: Bool? = nil, isGameFinished: Bool? = nil, startTeam: Int? = nil, usersOrder: [Int]? = nil) {
+        self.userID1 = userID1
         self.userID2 = userID2
         self.userID3 = userID3
-        self.userID4 = userID4
         self.isGameStarted = isGameStarted
         self.isGameFinished = isGameFinished
+        self.startTeam = startTeam
+        self.usersOrder = usersOrder
     }
 }
 
